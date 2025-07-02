@@ -13,10 +13,20 @@ class ResearchWorkflow:
         self.prompts = DeveloperToolsPrompts()
         self.workflow = self._build_workflow() #private method below
     
-    def _build_workflow(self):
-        pass
+    def _build_workflow(self): #LAST STEP: finally go back to langgraph and build workflow
+        graph = StateGraph(ResearchState)
+
+        graph.add_node("extract_tools", self._extract_tools_step) #create nodes for each step
+        graph.add_node("research", self._research_step)
+        graph.add_node("analyze", self._analyze_step)
+        graph.set_entry_point("extract_tools") #1st entry point we want to begin and then order of execution
+        graph.add_edge("extract_tools", "research")
+        graph.add_edge("research", "analyze")
+        graph.add_edge("analyze", "extract_tools", END)
+        return graph.compile()
+     
     #workflow step 1
-    def _extract_tools_steps(self, state: ResearchState) -> Dict[str, Any]: #leading with _ means private method not to be called outside of class, each function is a node/stages in langgraph which needs a stage, we update state here
+    def _extract_tools_step(self, state: ResearchState) -> Dict[str, Any]: #leading with _ means private method not to be called outside of class, each function is a node/stages in langgraph which needs a stage, we update state here
         print(f"Finding articles about: {state.query}")
 
         article_query = f"{state.query} tools comparison best alternatives" #looks up articles based on user query
@@ -116,4 +126,23 @@ class ResearchWorkflow:
                 companies.append(company) #put llm analyzed result back to companies list
 
         return {"companies": companies}
-           
+    
+    def _analyze_step(self, state: ResearchState) -> Dict[str, Any]:
+        print ("Gnerating recommendations")
+
+        companies_data = ", ".join([
+            company.json() for company in state.companies #look through all companies and convert to json
+        ])
+
+        messages = [ #pass data to llm
+            SystemMessage(content=self.prompts.RECOMMENDATIONS_SYSTEM),
+            HumanMessage(content=self.prompts.recommendations_user(companies_data)),
+        ]
+
+        response = self.llm.invoke(messages)
+        return {"analysis": response.content}
+    
+    def run(self, query: str) -> ResearchState: #run langgrpah grapgh for us
+        initial_state = ResearchState (query=query)
+        final_state = self.workflow.invoke(initial_state)
+        return ResearchState(**final_state) #convert dict into python object with custom class
