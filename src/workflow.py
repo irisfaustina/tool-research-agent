@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from langgraph.graph import StateGraph, END
 from langchain_openai import ChatOpenAI
-from langchain_core.message import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 from .models import ResearchState, CompanyInfo, CompanyAnalysis
 from .firecrawl import FirecrawlService
 from .prompts import DeveloperToolsPrompts
@@ -22,7 +22,7 @@ class ResearchWorkflow:
         graph.set_entry_point("extract_tools") #1st entry point we want to begin and then order of execution
         graph.add_edge("extract_tools", "research")
         graph.add_edge("research", "analyze")
-        graph.add_edge("analyze", "extract_tools", END)
+        graph.add_edge("analyze", END)
         return graph.compile()
      
     #workflow step 1
@@ -130,13 +130,13 @@ class ResearchWorkflow:
     def _analyze_step(self, state: ResearchState) -> Dict[str, Any]:
         print ("Gnerating recommendations")
 
-        companies_data = ", ".join([
+        company_data = ", ".join([
             company.json() for company in state.companies #look through all companies and convert to json
         ])
 
         messages = [ #pass data to llm
             SystemMessage(content=self.prompts.RECOMMENDATIONS_SYSTEM),
-            HumanMessage(content=self.prompts.recommendations_user(companies_data)),
+            HumanMessage(content=self.prompts.recommendations_user(state.query, company_data)),
         ]
 
         response = self.llm.invoke(messages)
