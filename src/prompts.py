@@ -1,3 +1,5 @@
+#prompts.py is where we define the prompts that we want to use in our application
+
 class DeveloperToolsPrompts:
     """Collection of prompts for analyzing developer tools and technologies"""
 
@@ -6,7 +8,7 @@ class DeveloperToolsPrompts:
                             Focus on actual products/tools that developers can use, not general concepts or features."""
 
     @staticmethod
-    def tool_extraction_user(query: str, content: str) -> str: #take some variables and embed in prompt
+    def tool_extraction_user(query: str, content: str) -> str: #functions that take some variables and embed in prompt
         return f"""Query: {query}
                 Article Content: {content}
 
