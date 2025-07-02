@@ -46,7 +46,7 @@ class ResearchWorkflow:
         except Exception as e:
             print(f"Error extracting tools: {e}")
             return {"extracted_tools": []} #can still move on to the next step
-    #workflow step 2
+   #???
     def _analyze_company_content(self, company_name: str, content: str) -> CompanyAnalysis: #helper method that will help with our steps by returning company analysis model
         sturctured_llm = self.llm.with_structured_output(CompanyAnalysis) #wraps llm with structured output as defined in CompanyAnalysis
 
@@ -85,6 +85,19 @@ class ResearchWorkflow:
         print("Researching specific tools:", {','.join(tool_names)})   
 
         companies =[]
-        for tool_name in tool_names:
+        for tool_name in tool_names: #loolkup official site of tool
             tool_search_results = self.firecrawl.search_companies(tool_name + " official site", num_results=1)
+            if tool_search_results:
+                result = tool_search_results.data[0]
+                url = result.get("url", "")
+                
+                company_info = CompanyInfo(
+                    name=tool_name,
+                    website=url,
+                    description="",
+                    pricing_model="Unknown",
+                    is_open_source=None,
+                )
+
+        return {"companies": companies}
            
