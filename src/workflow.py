@@ -85,19 +85,35 @@ class ResearchWorkflow:
         print("Researching specific tools:", {','.join(tool_names)})   
 
         companies =[]
-        for tool_name in tool_names: #loolkup official site of tool
+        for tool_name in tool_names: #loolkup official site of tool for every tool
             tool_search_results = self.firecrawl.search_companies(tool_name + " official site", num_results=1)
+            
             if tool_search_results:
                 result = tool_search_results.data[0]
-                url = result.get("url", "")
+                url = result.get("url", "") #get url of official site
                 
-                company_info = CompanyInfo(
+                company= CompanyInfo( #set up company info object
                     name=tool_name,
+                    description=result.get("markdown", ""),
                     website=url,
-                    description="",
-                    pricing_model="Unknown",
-                    is_open_source=None,
+                    tech_stack=[],
+                    competitors=[],
                 )
+
+                scraped = self.firecrawl.scrape_company_pages(url) #scrape content from official site
+                if scraped:
+                    content = scraped.markdown
+                    analysis = self._analyze_company_content(company.name, content) #lllm to analyze content
+                    #update company info with analysis
+                    company.pricing_model = analysis.pricing_model
+                    company.is_open_source = analysis.is_open_source
+                    company.tech_stack = analysis.tech_stack
+                    company.description = analysis.description
+                    company.api_available = analysis.api_available
+                    company.language_support = analysis.language_support
+                    company.integration_capabilities = analysis.integration_capabilities
+
+                companies.append(company) #put llm analyzed result back to companies list
 
         return {"companies": companies}
            
