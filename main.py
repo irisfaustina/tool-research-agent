@@ -1,11 +1,11 @@
 from dotenv import load_dotenv
-from src.workflow import Workflow
+from src.workflow import ResearchWorkflow
 
 load_dotenv()
 
 
 def main():
-    workflow = Workflow()
+    workflow = ResearchWorkflow()
     print("Developer Tools Research Agent")
 
     while True:
