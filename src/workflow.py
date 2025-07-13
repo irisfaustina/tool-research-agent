@@ -25,7 +25,7 @@ class ResearchWorkflow:
         graph.add_edge("analyze", END)
         return graph.compile()
      
-    #workflow step 1
+    #node #1
     def _extract_tools_step(self, state: ResearchState) -> Dict[str, Any]: #leading with _ means private method not to be called outside of class, each function is a node/stages in langgraph which needs a stage, we update state here
         print(f"Finding articles about: {state.query}")
 
@@ -56,7 +56,7 @@ class ResearchWorkflow:
         except Exception as e:
             print(f"Error extracting tools: {e}")
             return {"extracted_tools": []} #can still move on to the next step
-   #???
+   #helper function not a node
     def _analyze_company_content(self, company_name: str, content: str) -> CompanyAnalysis: #helper method that will help with our steps by returning company analysis model
         sturctured_llm = self.llm.with_structured_output(CompanyAnalysis) #wraps llm with structured output as defined in CompanyAnalysis
 
@@ -78,7 +78,7 @@ class ResearchWorkflow:
                 language_support=[],
                 integration_capabilities=[],
             ) #returns empty model
-
+    #node #2
     def _research_step(self, state: ResearchState) -> Dict[str, Any]: #research step
         extracted_tools = getattr(state, "extracted_tools", [])
 
@@ -126,7 +126,7 @@ class ResearchWorkflow:
                 companies.append(company) #put llm analyzed result back to companies list
 
         return {"companies": companies}
-    
+    #node #3
     def _analyze_step(self, state: ResearchState) -> Dict[str, Any]:
         print ("Gnerating recommendations")
 
